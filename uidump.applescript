@@ -1,14 +1,8 @@
 use AppleScript version "2.4" -- Yosemite (10.10) or later
 use scripting additions
 
--- 一定要把 QQ 这个应用设置到 frontmost，也就是 focus 到当前的 app 窗口上
 tell application "QQ" to activate
 tell application "System Events" to set frontmost of process "QQ" to true
-
-set output to ("开始执行")
-do shell script "echo " & quoted form of output
-
-set classNames to {}
 tell application "System Events"
 	tell application process "QQ"
 		set winList to every window
@@ -16,13 +10,18 @@ tell application "System Events"
 		set entirecontents to get entire contents of oWin
 		log "###each entirecontents"
 		-- set theentirecontents to the length of entirecontents
+		set repeatindex to -1
 		repeat with content in entirecontents
-			log content
+			set repeatindex to repeatindex + 1
+			--log repeatindex
+			if (repeatindex = 80) then
+				exit repeat
+			end if
+			log "#####################"
 			set classname to get class of content
 			log "classname:" & classname
-			set contenttext to get name of conetnt
-			log contenttext
-			set positionxy to get the position of the content			
+			log content
+			set positionxy to get the position of the content
 			set Xcord to item 1 of positionxy
 			set Ycord to item 2 of positionxy
 			log "position:" & Xcord & "," & Ycord
@@ -32,12 +31,22 @@ tell application "System Events"
 			log "size:" & sizew & "," & sizeh
 		end repeat
 	end tell
-	tell front window of (first application process whose frontmost is true)
-		repeat with uiElem in entire contents as list
-			set classNames to classNames & (class of uiElem as string)
-		end repeat
-	end tell
 end tell
+
+
+
+on click_an_element (an_element)
+    tell application "QQ" to activate
+    tell application "System Events"
+        tell application process "QQ"
+            try
+                click an_element
+            end try
+        end tell
+    end tell
+end click_an_element
+
+
 
 
 --  tell application "System Events"
