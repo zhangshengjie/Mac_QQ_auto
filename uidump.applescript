@@ -6,8 +6,24 @@ tell application "System Events" to set frontmost of process "QQ" to true
 tell application "System Events"
 	tell application process "QQ"
 		set winList to every window
-		set winListLen to get count of winList
-		set oWin to item winListLen of winList
+		set oWin to item 1 of winList
+		repeat with itWin in winList
+			set num to count of UI elements of itWin
+			if (num = 16) then --????????16
+                perform action "AXRaise" of itWin
+				set mainWin to itWin
+				exit repeat
+			end if
+		end repeat
+
+
+		set windentirecontents to get entire contents of oWin
+        set addBtn to get item 10 of windentirecontents
+        set positionxy to get the position of the addBtn
+		set addX to item 1 of positionxy
+		set addY to item 2 of positionxy
+        log "add:" & addX & "," & addY
+		
 		set winp to get position of oWin
 		set wins to get size of oWin
 		set oWinY to item 2 of winp
@@ -33,5 +49,7 @@ tell application "System Events"
 				end if
 			end if
 		end repeat
+
+
 	end tell
 end tell

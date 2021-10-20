@@ -4,7 +4,7 @@
  * @Autor: z.cejay@gmail.com
  * @Date: 2021-08-07 22:36:38
  * @LastEditors: cejay
- * @LastEditTime: 2021-10-20 14:57:15
+ * @LastEditTime: 2021-10-20 22:31:36
  */
 import got from 'got';
 import path from 'path';
@@ -80,6 +80,10 @@ var QQMap = new Map<string, QQMsg>();
 var ignoreQQ = new Set<string>();
 
 var uidumpEnd = true;
+
+var add_x = 0;
+var add_y = 0;
+
 function uidump() {
     if (uidumpEnd === false) {
         return;
@@ -111,6 +115,10 @@ function uidump() {
                 }
             }
             itemCache.push(uiLog);
+        } else if (uiLog.startsWith("add:")) {
+            let a1 = uiLog.substring(4).split(',');
+            add_x = parseInt(a1[0]);
+            add_y = parseInt(a1[1]);
         } else if (uiLog.startsWith("maxY:")) {
             winMaxY = parseInt(uiLog.substring(5));
         } else {
@@ -133,7 +141,7 @@ async function openChatSend(msg: string, x: number, y: number) {
     consoleTimeLog(`click ${x},${y}`);
     if (clipboard.writeText(clipboard.FORMAT_PLAIN_TEXT, msg)) {
         await click(x, y);
-        //shell.exec(`osascript /Users/cejay/Documents/GitHub/Mac_QQ_auto/sendmsg.applescript`);
+        shell.exec(`osascript /Users/cejay/Documents/GitHub/Mac_QQ_auto/sendmsg.applescript`);
         return true;
     } else {
         consoleTimeLog("剪切板操作失败");
@@ -142,6 +150,34 @@ async function openChatSend(msg: string, x: number, y: number) {
 }
 async function click(x: number, y: number) {
     shell.exec(`${clickPath} -x ${x} -y ${y}`);
+}
+
+function execosascript(applescript: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        let child = shell.exec(`osascript ${applescript}`, { async: true });
+        if (child.stderr) {
+            child.stderr.on('data', (data: string) => {
+                resolve(data.trim());
+            });
+        } else {
+            resolve("");
+        }
+    });
+}
+
+async function add(qqnum: string) {
+    await click(add_x + 20, add_y + 10);
+    await click(add_x + 20, add_y + 40);
+    //已经打开了搜索框框
+    let data = await execosascript('/Users/cejay/Documents/GitHub/Mac_QQ_auto/add.applescript');
+    if (data.startsWith("ps:")) {
+        let inputXYArr = data.substring(3).split(',');
+        let inputX = parseInt(inputXYArr[0]);
+        let inputY = parseInt(inputXYArr[1]);
+        openChatSend(qqnum,inputX + 10, inputY + 10);
+
+    }
+
 }
 
 var autoMsg = "这是一条自动回复/菜汪，被回复的内容是:\n";
@@ -183,6 +219,15 @@ async function main() {
                     firstInit = false;
                     consoleTimeLog("初始化完成，已加载" + QQMapLastMsg.size + "个聊天窗口");
                 } else {
+
+                    if (true) {
+                        //添加好友
+                        if (add_x > 0 && add_y > 0) {
+                            await add("364997891");
+                        }
+                        return;
+                    }
+
                     let sendMsgPre: QQMsg[] = [];
                     for (const item of QQMap) {
                         if (!QQMapLastMsg.has(item[0])) {
