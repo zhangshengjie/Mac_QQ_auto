@@ -4,7 +4,7 @@
  * @Autor: z.cejay@gmail.com
  * @Date: 2021-08-07 22:36:38
  * @LastEditors: cejay
- * @LastEditTime: 2021-10-20 14:32:49
+ * @LastEditTime: 2021-10-20 14:57:15
  */
 import got from 'got';
 import path from 'path';
@@ -144,7 +144,7 @@ async function click(x: number, y: number) {
     shell.exec(`${clickPath} -x ${x} -y ${y}`);
 }
 
-var autoMsg = "你好啊\nover";
+var autoMsg = "这是一条自动回复/菜汪，被回复的内容是:\n";
 
 //var clickPath = path.join(__dirname, 'click');
 var clickPath = './click';
@@ -206,7 +206,7 @@ async function main() {
                         sendMsgPre = sendMsgPre.sort(function (a, b) { return b.index - a.index });
                         for (let index = 0; index < sendMsgPre.length; index++) {
                             const element = sendMsgPre[index];
-                            let sendmsg = "这个是对于【" + element.msg + "】消息的自动回复";
+                            let sendmsg = autoMsg + element.msg;
                             if (await openChatSend(sendmsg, element.bounds.x + Math.floor(element.bounds.w / 2), element.bounds.y + Math.floor(element.bounds.h / 2))) {
                                 QQMapLastMsg.set(element.name, sendmsg);
                                 ignoreQQ.add(element.name);
