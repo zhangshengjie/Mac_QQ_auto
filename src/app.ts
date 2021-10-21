@@ -4,7 +4,7 @@
  * @Autor: z.cejay@gmail.com
  * @Date: 2021-08-07 22:36:38
  * @LastEditors: cejay
- * @LastEditTime: 2021-10-20 22:31:36
+ * @LastEditTime: 2021-10-21 11:11:28
  */
 import got from 'got';
 import path from 'path';
@@ -92,7 +92,7 @@ function uidump() {
     let winMaxY = 0;
     let itemCache: string[] = [];
     let index = 0;
-    let osascript = spawn('osascript', ['/Users/cejay/Documents/GitHub/Mac_QQ_auto/uidump.applescript']);
+    let osascript = spawn('osascript', ['scripts/uidump.applescript']);
 
     osascript.stdout.on('data', (data: any) => {
         console.log(`stdout: ${data}`);
@@ -141,7 +141,7 @@ async function openChatSend(msg: string, x: number, y: number) {
     consoleTimeLog(`click ${x},${y}`);
     if (clipboard.writeText(clipboard.FORMAT_PLAIN_TEXT, msg)) {
         await click(x, y);
-        shell.exec(`osascript /Users/cejay/Documents/GitHub/Mac_QQ_auto/sendmsg.applescript`);
+        await execosascript("scripts/sendmsg.applescript");
         return true;
     } else {
         consoleTimeLog("剪切板操作失败");
@@ -169,7 +169,7 @@ async function add(qqnum: string) {
     await click(add_x + 20, add_y + 10);
     await click(add_x + 20, add_y + 40);
     //已经打开了搜索框框
-    let data = await execosascript('/Users/cejay/Documents/GitHub/Mac_QQ_auto/add.applescript');
+    let data = await execosascript('scripts/add.applescript');
     if (data.startsWith("ps:")) {
         let inputXYArr = data.substring(3).split(',');
         let inputX = parseInt(inputXYArr[0]);
