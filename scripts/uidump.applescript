@@ -24,42 +24,49 @@ tell application "System Events"
 		--		exit repeat
 		--	end if
 		--end repeat
-		
-		set windentirecontents to get entire contents of mainWin
-		set contentsLen to get count of windentirecontents
-		log contentsLen
-		set addBtn to get item 10 of windentirecontents
-		set positionxy to get the position of the addBtn
-		set addX to item 1 of positionxy
-		set addY to item 2 of positionxy
-		log "add:" & addX & "," & addY
-		
 		set winp to get position of mainWin
 		set wins to get size of mainWin
 		set oWinY to item 2 of winp
 		set oWinH to item 2 of wins
 		set oWinMaxY to oWinY + oWinH
 		log "maxY:" & oWinMaxY
-		set entirecontents to get entire contents of mainWin
-		set repeatindex to -1
-		repeat with content in entirecontents
-			set repeatindex to repeatindex + 1
-			set classname to get class of content
-			if ("row" contains classname or "static text" contains classname) then
-				if ("row" contains classname) then
-					set positionxy to get the position of the content
-					set Xcord to item 1 of positionxy
-					set Ycord to item 2 of positionxy
-					set sizec to get the size of the content
-					set sizew to item 1 of sizec
-					set sizeh to item 2 of sizec
-					log "ps," & Xcord & "," & Ycord & "," & sizew & "," & sizeh
-				else
-					log content
+		
+		set UIelm to UI elements of mainWin
+		set UIelmCount to get count of UIelm
+		if (UIelmCount > 11) then
+			set repeatIndex to 0
+			repeat with oneUIelm in UIelm
+				set repeatIndex to repeatIndex + 1
+				set oneUIelmCls to get class of oneUIelm as Unicode text
+				if (oneUIelmCls = "splitter group") then
+					--聊天列表,前一个元素即为添加好友按钮
+					set addBtn to get item (repeatIndex - 1) of UIelm
+					set positionxy to get the position of the addBtn
+					set addX to item 1 of positionxy
+					set addY to item 2 of positionxy
+					log "add:" & addX & "," & addY
+					
+					--聊天列表
+					
+					set entirecontents to get entire contents of oneUIelm
+					repeat with content in entirecontents
+						set classname to get class of content as Unicode text
+						if ("row" = classname or "static text" contains classname) then
+							if ("row" = classname) then
+								set positionxyRow to get the position of the content
+								set Xcord to item 1 of positionxyRow
+								set Ycord to item 2 of positionxyRow
+								set sizec to get the size of the content
+								set sizew to item 1 of sizec
+								set sizeh to item 2 of sizec
+								log "ps:" & Xcord & "," & Ycord & "," & sizew & "," & sizeh
+							else
+								log content
+							end if
+						end if
+					end repeat
 				end if
-			end if
-		end repeat
-		
-		
+			end repeat
+		end if
 	end tell
 end tell
