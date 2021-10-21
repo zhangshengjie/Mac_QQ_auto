@@ -21,11 +21,11 @@ tell application "System Events"
 					set indexTmp to indexTmp + 1
 					if (classname = "static text") then
 						set txt to get name of winitem
-						if (txt = "???") then
-							log "find ???"
+						if (txt = "联系人") then
+							--log "find 联系人"
 							set contactIndex to indexTmp
-						else if (txt = "??") then
-							log "find ?? ??"
+						else if (txt = "群组") then
+							--log "find 群组 退出"
 							set contactIndex to -1
 							exit repeat
 						end if

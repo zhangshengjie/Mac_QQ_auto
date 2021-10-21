@@ -5,18 +5,25 @@ tell application "QQ" to activate
 tell application "System Events" to set frontmost of process "QQ" to true
 tell application "System Events"
 	tell application process "QQ"
+		--按键esc
+		key code 53
+		
 		set winList to every window
-		set oWin to item 1 of winList
-		repeat with itWin in winList
-			set num to count of UI elements of itWin
-			log num
-			if (num = 16) then
-				perform action "AXRaise" of itWin
-				set mainWin to itWin
-				log mainWin
-				exit repeat
-			end if
-		end repeat
+		
+		set winListLen to get count of winList
+		log winListLen
+		set mainWin to item winListLen of winList
+		--set oWin to item 1 of winList
+		--repeat with itWin in winList
+		--	set num to count of UI elements of itWin
+		--	log num
+		--	if (num = 16) then
+		--		perform action "AXRaise" of itWin
+		--		set mainWin to itWin
+		--		log mainWin
+		--		exit repeat
+		--	end if
+		--end repeat
 		
 		set windentirecontents to get entire contents of mainWin
 		set contentsLen to get count of windentirecontents
@@ -27,13 +34,13 @@ tell application "System Events"
 		set addY to item 2 of positionxy
 		log "add:" & addX & "," & addY
 		
-		set winp to get position of oWin
-		set wins to get size of oWin
+		set winp to get position of mainWin
+		set wins to get size of mainWin
 		set oWinY to item 2 of winp
 		set oWinH to item 2 of wins
 		set oWinMaxY to oWinY + oWinH
 		log "maxY:" & oWinMaxY
-		set entirecontents to get entire contents of oWin
+		set entirecontents to get entire contents of mainWin
 		set repeatindex to -1
 		repeat with content in entirecontents
 			set repeatindex to repeatindex + 1

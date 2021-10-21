@@ -1,0 +1,1 @@
+use AppleScript version "2.4" -- Yosemite (10.10) or lateruse scripting additionson run argv	tell application "System Events"		repeat (item 1 of argv) times			key down command			keystroke "v"			key up command			keystroke tab		end repeat	end tellend run

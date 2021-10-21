@@ -13,7 +13,7 @@ tell application "System Events"
 				set windentirecontents to get entire contents of wind
 				set windentirecontentsCount to get count of windentirecontents
 				if (windentirecontentsCount > 10) then
-                key code 53
+                 --key code 53
             		set inputIndex to 4
 					set inputBox to item inputIndex of windentirecontents
 					set winp to get position of inputBox

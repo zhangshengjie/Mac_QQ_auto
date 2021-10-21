@@ -4,7 +4,7 @@
  * @Autor: z.cejay@gmail.com
  * @Date: 2021-08-07 22:36:38
  * @LastEditors: cejay
- * @LastEditTime: 2021-10-21 11:11:28
+ * @LastEditTime: 2021-10-21 16:12:18
  */
 import got from 'got';
 import path from 'path';
@@ -84,11 +84,19 @@ var uidumpEnd = true;
 var add_x = 0;
 var add_y = 0;
 
-function uidump() {
+async function uidump() {
     if (uidumpEnd === false) {
         return;
     }
     uidumpEnd = false;
+
+    await _uidump();
+}
+
+function _uidump() {
+
+
+
     let winMaxY = 0;
     let itemCache: string[] = [];
     let index = 0;
@@ -138,7 +146,7 @@ function uidump() {
 }
 
 async function openChatSend(msg: string, x: number, y: number) {
-    consoleTimeLog(`click ${x},${y}`);
+    //consoleTimeLog(`click ${x},${y}`);
     if (clipboard.writeText(clipboard.FORMAT_PLAIN_TEXT, msg)) {
         await click(x, y);
         await execosascript("scripts/sendmsg.applescript");
@@ -149,38 +157,112 @@ async function openChatSend(msg: string, x: number, y: number) {
     return false;
 }
 async function click(x: number, y: number) {
+    consoleTimeLog(`click ${x},${y}`);
     shell.exec(`${clickPath} -x ${x} -y ${y}`);
 }
 
 function execosascript(applescript: string): Promise<string> {
     return new Promise((resolve, reject) => {
-        let child = shell.exec(`osascript ${applescript}`, { async: true });
-        if (child.stderr) {
-            child.stderr.on('data', (data: string) => {
-                resolve(data.trim());
-            });
+        let child = shell.exec(`osascript ${applescript}`);
+        let data = child.stderr;
+        if (data) {
+            resolve(data);
         } else {
             resolve("");
         }
     });
+
 }
 
 async function add(qqnum: string) {
     await click(add_x + 20, add_y + 10);
+    await asyncsleep(100);
     await click(add_x + 20, add_y + 40);
+    await asyncsleep(300);
     //已经打开了搜索框框
     let data = await execosascript('scripts/add.applescript');
     if (data.startsWith("ps:")) {
         let inputXYArr = data.substring(3).split(',');
         let inputX = parseInt(inputXYArr[0]);
         let inputY = parseInt(inputXYArr[1]);
-        openChatSend(qqnum,inputX + 10, inputY + 10);
+        let ret = await openChatSend(qqnum, inputX + 10, inputY + 10);
+        if (ret) {
+            //查找添加好友按钮
+            let add_x = 0;
+            let add_y = 0;
+            for (let index = 0; index < 5; index++) {
+                await asyncsleep(500);
+                //console.log("scripts/findAddBtn.applescript");
+                let data = await execosascript('scripts/findAddBtn.applescript');
+                //console.log(`data=>${data}`);
+                if (data.startsWith("ps:")) {
+                    consoleTimeLog(`添加好友按钮：${data}`);
+                    let inputXYArrTmp2 = data.substring(3).split(',');
+                    add_x = parseInt(inputXYArrTmp2[0]);
+                    add_y = parseInt(inputXYArrTmp2[1]);
+                    break;
+                }
+            }
+            if (add_x > 0 && add_y > 0) {
+                let send_x = 0;
+                let send_y = 0;
+                let inputLen = 0;
+                consoleTimeLog(`click ${add_x},${add_y}`);
+                await click(add_x + 5, add_y + 5);
+                for (let index = 0; index < 5; index++) {
+                    await asyncsleep(300);
+                    let data = await execosascript('scripts/checkAddType.applescript');
+                    if (data.indexOf("inputlen:") > -1) {
+                        if (data.indexOf("-2") > 0) {
+                            //不允许任何人加好友
+                            break;
+                        }
+                        if (data.indexOf("ps:") > -1) {
+                            let arr1 = data.split('\n');
+                            for (const iterator of arr1) {
+                                let row = iterator.trim();
+                                if (row.startsWith("inputlen:")) {
+                                    inputLen = parseInt(row.substring("inputlen:".length));
+                                } else if (row.startsWith("ps:")) {
+                                    let inputXYArrTmp2 = row.substring(3).split(',');
+                                    send_x = parseInt(inputXYArrTmp2[0]);
+                                    send_y = parseInt(inputXYArrTmp2[1]);
+                                }
+                            }
+                            break;
+                        }
 
+                    }
+                }
+
+                if (send_x > 0 && send_y > 0) {
+                    if (inputLen > 0) {
+                        //autoVerifyMsg
+                        if (clipboard.writeText(clipboard.FORMAT_PLAIN_TEXT, autoVerifyMsg)) {
+                            await execosascript('scripts/inputTimes.applescript ' + inputLen);
+                        }
+                    }
+                    //点击添加好友按钮
+                    await click(send_x + 20, send_y + 20);
+                    return true;
+                }
+
+            }
+
+        }
+    } else {
+        consoleTimeLog("有其他干扰 command+w 关闭");
+        for (let index = 0; index < 3; index++) {
+            await asyncsleep(200);
+            await execosascript('scripts/quit.applescript');
+        }
     }
 
 }
 
 var autoMsg = "这是一条自动回复/菜汪，被回复的内容是:\n";
+
+var autoVerifyMsg = "你好，加你通过下";
 
 //var clickPath = path.join(__dirname, 'click');
 var clickPath = './click';
@@ -261,7 +343,10 @@ async function main() {
                     }
                 }
             }
-
+            else {
+                await execosascript("scripts/init.applescript");
+                await asyncsleep(2000);
+            }
 
         }
 
