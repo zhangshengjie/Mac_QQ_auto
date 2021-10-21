@@ -4,7 +4,7 @@
  * @Autor: z.cejay@gmail.com
  * @Date: 2021-08-07 22:36:38
  * @LastEditors: cejay
- * @LastEditTime: 2021-10-21 16:12:18
+ * @LastEditTime: 2021-10-21 16:35:49
  */
 import got from 'got';
 import path from 'path';
@@ -109,7 +109,7 @@ function _uidump() {
     osascript.stderr.on('data', (data: Buffer[]) => {
         //console.error(`stderr: ${data}`);
         let uiLog = data.toString().trim();
-        if (uiLog.startsWith('ps,')) {
+        if (uiLog.startsWith('ps:')) {
             if (itemCache.length > 0) {
                 let item = new QQMsg(itemCache, index++);
                 itemCache = [];
