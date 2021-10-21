@@ -4,7 +4,7 @@
  * @Autor: z.cejay@gmail.com
  * @Date: 2021-08-07 22:36:38
  * @LastEditors: cejay
- * @LastEditTime: 2021-10-21 17:12:30
+ * @LastEditTime: 2021-10-21 17:34:02
  */
 import got from 'got';
 import path from 'path';
@@ -79,70 +79,68 @@ var QQMap = new Map<string, QQMsg>();
 
 var ignoreQQ = new Set<string>();
 
-var uidumpEnd = true;
 
 var add_x = 0;
 var add_y = 0;
 
-async function uidump() {
-    if (uidumpEnd === false) {
-        return;
-    }
-    uidumpEnd = false;
 
-    await _uidump();
-}
+function uidump() {
+    return new Promise((resolve, reject) => {
+        let winMaxY = 0;
+        let itemCache: string[] = [];
+        let index = 0;
+        let osascript = spawn('osascript', ['scripts/uidump.applescript']);
 
-function _uidump() {
+        osascript.stdout.on('data', (data: any) => {
+            console.log(`stdout: ${data}`);
+        });
 
-
-
-    let winMaxY = 0;
-    let itemCache: string[] = [];
-    let index = 0;
-    let osascript = spawn('osascript', ['scripts/uidump.applescript']);
-
-    osascript.stdout.on('data', (data: any) => {
-        console.log(`stdout: ${data}`);
-    });
-
-    osascript.stderr.on('data', (data: Buffer[]) => {
-        //console.error(`stderr: ${data}`);
-        let uiLog = data.toString().trim();
-        if (uiLog.startsWith('ps:')) {
-            if (itemCache.length > 0) {
-                let item = new QQMsg(itemCache, index++);
-                itemCache = [];
-                if (item.succ) {
-                    if (item.bounds.y < 0 || (item.bounds.y + item.bounds.h) >= winMaxY) {
-                        spawn('kill', [osascript.pid]);
-                    } else {
-                        QQMap.set(item.name, item);
-                        //console.log(item);
+        osascript.stderr.on('data', (data: Buffer[]) => {
+            //console.error(`stderr: ${data}`);
+            let uiLog = data.toString().trim();
+            if (uiLog.startsWith('ps:')) {
+                if (uiLog.includes(",-")) {
+                    spawn('kill', [osascript.pid]);
+                } else {
+                    if (itemCache.length > 0) {
+                        let item = new QQMsg(itemCache, index++);
+                        itemCache = [];
+                        if (item.succ) {
+                            if (item.bounds.y < 0 || (item.bounds.y + item.bounds.h) >= winMaxY) {
+                                spawn('kill', [osascript.pid]);
+                            } else {
+                                QQMap.set(item.name, item);
+                                //console.log(item);
+                            }
+                        }
                     }
                 }
-            }
-            itemCache.push(uiLog);
-        } else if (uiLog.startsWith("add:")) {
-            let a1 = uiLog.substring(4).split(',');
-            add_x = parseInt(a1[0]);
-            add_y = parseInt(a1[1]);
-        } else if (uiLog.startsWith("maxY:")) {
-            winMaxY = parseInt(uiLog.substring(5));
-        } else {
-            let index1 = uiLog.indexOf("static text ");
-            let index2 = uiLog.lastIndexOf(" of UI element 1 of row ");
-            if (index1 === 0 && index2 > 0) {
-                itemCache.push(uiLog.substring("static text ".length, index2));
+
+                itemCache.push(uiLog);
+            } else if (uiLog.startsWith("add:")) {
+                let a1 = uiLog.substring(4).split(',');
+                add_x = parseInt(a1[0]);
+                add_y = parseInt(a1[1]);
+            } else if (uiLog.startsWith("maxY:")) {
+                winMaxY = parseInt(uiLog.substring(5));
+            } else {
+                let index1 = uiLog.indexOf("static text ");
+                let index2 = uiLog.lastIndexOf(" of UI element 1 of row ");
+                if (index1 === 0 && index2 > 0) {
+                    itemCache.push(uiLog.substring("static text ".length, index2));
+                }
+
             }
 
-        }
+        });
+        osascript.on('close', (code: any) => {
+            //console.log(`child process exited with code ${code}`);
+            resolve(true);
+        });
+    });
 
-    });
-    osascript.on('close', (code: any) => {
-        uidumpEnd = true;
-        //console.log(`child process exited with code ${code}`);
-    });
+
+
 }
 
 async function openChatSend(msg: string, x: number, y: number) {
@@ -323,7 +321,7 @@ async function main() {
     consoleTimeLog("开始运行");
     let firstInit = true;
     while (true) {
-        if (uidumpEnd) {
+        if (true) {
             consoleTimeLog('===========');
             //判断是否需要回复消息
             if (QQMap.size > 0) {
@@ -338,7 +336,7 @@ async function main() {
                     consoleTimeLog("初始化完成，已加载" + QQMapLastMsg.size + "个聊天窗口");
                 } else {
 
-                    if (true) {
+                    if (false) {
                         //添加好友
                         if (add_x > 0 && add_y > 0) {
                             await add("364997891");
@@ -386,8 +384,7 @@ async function main() {
 
         }
 
-        uidump();
-        await asyncsleep(500);
+        await uidump();
     }
 
 
