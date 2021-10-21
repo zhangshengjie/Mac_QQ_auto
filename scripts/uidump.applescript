@@ -7,11 +7,8 @@ tell application "System Events"
 	tell application process "QQ"
 		--按键esc
 		key code 53
-		
 		set winList to every window
-		
 		set winListLen to get count of winList
-		log winListLen
 		set mainWin to item winListLen of winList
 		--set oWin to item 1 of winList
 		--repeat with itWin in winList
@@ -49,22 +46,30 @@ tell application "System Events"
 					--聊天列表
 					
 					set entirecontents to get entire contents of oneUIelm
-					repeat with content in entirecontents
-						set classname to get class of content as Unicode text
-						if ("row" = classname or "static text" contains classname) then
-							if ("row" = classname) then
-								set positionxyRow to get the position of the content
-								set Xcord to item 1 of positionxyRow
-								set Ycord to item 2 of positionxyRow
-								set sizec to get the size of the content
-								set sizew to item 1 of sizec
-								set sizeh to item 2 of sizec
-								log "ps:" & Xcord & "," & Ycord & "," & sizew & "," & sizeh
-							else
-								log content
+					set entirecontentsCount to get count of entirecontents
+					if (entirecontentsCount < 10) then
+						-- 聊天列表是空
+						log "list_is_empty"
+					else
+						repeat with content in entirecontents
+							set classname to get class of content as Unicode text
+							if ("row" = classname or "static text" = classname) then
+								if ("row" = classname) then
+									set positionxyRow to get the position of the content
+									set Xcord to item 1 of positionxyRow
+									set Ycord to item 2 of positionxyRow
+									set sizec to get the size of the content
+									set sizew to item 1 of sizec
+									set sizeh to item 2 of sizec
+									log "ps:" & Xcord & "," & Ycord & "," & sizew & "," & sizeh
+								else
+									log content
+								end if
 							end if
-						end if
-					end repeat
+						end repeat
+						log "ps:-1,-1,-1,-1"
+						exit repeat
+					end if
 				end if
 			end repeat
 		end if
