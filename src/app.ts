@@ -4,7 +4,7 @@
  * @Autor: z.cejay@gmail.com
  * @Date: 2021-08-07 22:36:38
  * @LastEditors: cejay
- * @LastEditTime: 2021-10-21 16:35:49
+ * @LastEditTime: 2021-10-21 17:12:30
  */
 import got from 'got';
 import path from 'path';
@@ -206,7 +206,9 @@ async function add(qqnum: string) {
             if (add_x > 0 && add_y > 0) {
                 let send_x = 0;
                 let send_y = 0;
-                let inputLen = 0;
+                let cancel_x = 0;
+                let cancel_y = 0;
+                let inputType = 0;
                 consoleTimeLog(`click ${add_x},${add_y}`);
                 await click(add_x + 5, add_y + 5);
                 for (let index = 0; index < 5; index++) {
@@ -217,16 +219,21 @@ async function add(qqnum: string) {
                             //不允许任何人加好友
                             break;
                         }
-                        if (data.indexOf("ps:") > -1) {
+                        if (data.indexOf("cancelps:") > -1 && data.indexOf("okps:") > -1) {
                             let arr1 = data.split('\n');
                             for (const iterator of arr1) {
                                 let row = iterator.trim();
                                 if (row.startsWith("inputlen:")) {
-                                    inputLen = parseInt(row.substring("inputlen:".length));
-                                } else if (row.startsWith("ps:")) {
-                                    let inputXYArrTmp2 = row.substring(3).split(',');
+                                    inputType = parseInt(row.substring("inputlen:".length));
+                                } else if (row.startsWith("okps:")) {
+                                    let inputXYArrTmp2 = row.substring("okps:".length).split(',');
                                     send_x = parseInt(inputXYArrTmp2[0]);
                                     send_y = parseInt(inputXYArrTmp2[1]);
+                                }
+                                else if (row.startsWith("cancelps:")) {
+                                    let inputXYArrTmp2 = row.substring("cancelps:".length).split(',');
+                                    cancel_x = parseInt(inputXYArrTmp2[0]);
+                                    cancel_y = parseInt(inputXYArrTmp2[1]);
                                 }
                             }
                             break;
@@ -235,16 +242,45 @@ async function add(qqnum: string) {
                     }
                 }
 
-                if (send_x > 0 && send_y > 0) {
-                    if (inputLen > 0) {
-                        //autoVerifyMsg
-                        if (clipboard.writeText(clipboard.FORMAT_PLAIN_TEXT, autoVerifyMsg)) {
-                            await execosascript('scripts/inputTimes.applescript ' + inputLen);
-                        }
+                if (send_x > 0 && send_y > 0 && cancel_x > 0 && cancel_y > 0 && inputType > 0) {
+                    let canClickAddBtn = false;
+                    switch (inputType) {
+                        case 1:
+                            //不允许任何人
+                            break;
+                        case 2:
+                            //允许任何人
+                            canClickAddBtn = true;
+                            break;
+                        case 3:
+                            //需要验证信息
+                            if (clipboard.writeText(clipboard.FORMAT_PLAIN_TEXT, autoVerifyMsg)) {
+                                await execosascript('scripts/inputTimes.applescript 1');
+                            }
+                            canClickAddBtn = true;
+                            break;
+                        case 4:
+                            //需要回答验证问题 或者 需要回答问题并由我验证 1个问题
+                            break;
+                        case 5:
+                            //需要回答问题并由我验证 2个问题
+                            break;
+                        case 6:
+                            //需要回答问题并由我验证 3个问题
+                            break;
+
+                        default:
+                            break;
                     }
-                    //点击添加好友按钮
-                    await click(send_x + 20, send_y + 20);
-                    return true;
+
+
+                    if (canClickAddBtn) {
+                        //点击添加好友按钮
+                        await click(send_x + 20, send_y + 20);
+                    } else {
+                        await click(cancel_x + 20, cancel_y + 20);
+                    }
+
                 }
 
             }
