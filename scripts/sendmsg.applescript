@@ -7,5 +7,7 @@ tell application "System Events"
 	key down command
   	keystroke "v"
   	key up command
-	keystroke return
+  	
+	keystroke " "
+	--keystroke return
 end tell
